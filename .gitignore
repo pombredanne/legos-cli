@@ -1,0 +1,16 @@
+*.pyc
+
+/GithubCredentials.py
+/scripts/TwitterCredentials.py
+/dist/
+/build/
+/MANIFEST
+/PyGithub.egg-info/
+/.coverage
+/.idea
+/developer.github.com/
+/gh-pages/
+/doc/doctrees/
+/legos.egg-info
+/venv
+completer.hist
