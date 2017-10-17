@@ -53,7 +53,7 @@ def add_repo(ctx, repo, list):
 
     repo_list = get_tracked_repos()
 
-    if list:
+    if list or repo is None:
         for item in repo_list:
             print item
         return
