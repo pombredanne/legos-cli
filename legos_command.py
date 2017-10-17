@@ -44,14 +44,44 @@ def project_stats(ctx, repo):
     '''shows the basic project stats like stars, issues, watch and PRs for tracked/single repo'''
     print "\nProject stats"
 
-    if repo is not None:
-        print_stats(repo)
-        return
+    gh = Github()
 
+    if repo is not None:
+        print_stats(repo, gh)
+        return
+    
     repo_list = get_tracked_repos()
     for project in repo_list:
-        print_stats(project)
+        print_stats(project, gh)
 
+@cli.command(name='labels')
+@click.option('--repo', metavar='<github_repo>', help='get labels stats for the repo')
+@click.pass_context
+def label_stats(ctx, repo):
+    
+    gh = Github()
+    
+    label_list = ['bug', 'feature', 'need-more-info']
+
+    if repo is not None:
+        mylabels = get_lables(gh.get_repo(repo), label_list)
+        print_label_stats(repo, gh, mylabels)
+        return
+    
+    repo_list = get_tracked_repos()
+    
+    for project in repo_list:
+        mylabels = get_lables(gh.get_repo(project), label_list)
+        print_label_stats(project)
+
+
+def print_label_stats(repo, git, mylabels):
+    project = git.get_repo(repo)
+    for label in mylabels:
+        issues = project.get_issues(state='open', labels = [label])
+        print "label: {0}\tcount: {1}".format(label.name, total_count(issues))
+    print "PRs: {0}".format(get_pr_count(project))
+    
 
 @cli.command(name='track')
 @click.option('--repo', metavar='<github_repo>', help='add the repo to the trac list')
@@ -74,9 +104,9 @@ def add_repo(ctx, repo, list):
             print item
         return
 
-    file = open(file_name,'r+')
+    file = open(file_name,'a')
     if repo not in repo_list:
-        file.write(repo+'\n')
+        file.write (repo+'\n')
         file.close()
     click.echo(repo+ ' is added to the list')
 
@@ -87,17 +117,29 @@ def get_tracked_repos():
     file.close()
     return list_repo
 
-def print_stats(project):
-    gh = Github()
-    repo = gh.get_repo(project)
+def print_stats(project, git):
+    repo = git.get_repo(project)
     click.secho(repo.name, bold=True)
     click.echo(repo.description)
-    pr_count = 0
-    for _ in repo.get_pulls(state='open'):
-        pr_count = pr_count + 1
+    pr_count = get_pr_count(repo)
 
     stats_text = "stars: {0}\tissues: {1}\twatch: {2}\tPRs: {3}\n".format(repo.stargazers_count, repo.open_issues_count, repo.watchers_count, pr_count)
     click.echo(stats_text)
+
+def get_lables(repo, names):
+    labels = []
+    for name in names:
+       labels.append(repo.get_label(name))
+    return labels
+
+def get_pr_count(repo):
+    return total_count(repo.get_pulls(state='open'))
+
+def total_count(paginated_list):
+    pl_count = 0
+    for _ in paginated_list:
+        pl_count = pl_count + 1
+    return pl_count
 
 if  __name__ == '__main__':
     cli(obj={})
