@@ -45,3 +45,6 @@ def add_repo(repo):
     if repo not in list_repo:
         file.write(repo+'\n')
         file.close()
+
+if  __name__ == '__main__':
+    cli()
