@@ -9,20 +9,33 @@ from github import Github
 def cli(ctx):
     '''This is a command line tool to list the github issues'''
     #TODO: add code to fetch issue details
-    click.echo("Hello there!")
+    if ctx.invoked_subcommand is None:
+        click.echo("Hello there!")
 
-@cli.command(name='list')
+@cli.command(name='issues')
 @click.pass_context
 @click.option('--status', default='open', metavar='<text>', help='Indicates the state of the issues to return. Can be either open, closed, or all. Default: open')
-@click.argument('repo', metavar='<github_repo>')
+@click.option('--repo', metavar='<github_repo>', help='lists the issues for the repo')
 def list_issues(ctx, repo, status):
     ''' lists open issues for the repo by default'''
-    gh = Github()
     
-    click.echo(status+" issues from " + repo)
-    for issue in gh.get_repo(repo).get_issues(state=status):
-        localtiem = arrow.get(issue.created_at).to('local').humanize()
-        click.echo("{:4d} {:55.55} {}".format(issue.number, issue.title, localtiem))
+    if repo:
+        repo_list = [repo]
+    else:
+        repo_list = get_tracked_repos()
+
+    if repo_list.count == 0:
+        click.echo("No tracked repo")
+    
+    gh = Github()
+
+    for item in repo_list:
+        click.echo(status + " issues from " + item)
+        issues = gh.get_repo(item).get_issues(state=status)
+        
+        for issue in issues:
+            localtiem = arrow.get(issue.created_at).to('local').humanize()
+            click.echo("{:4d} {:55.55} {}".format(issue.number, issue.title, localtiem))
 
 @cli.command(name='track')
 @click.option('--repo', metavar='<github_repo>', help='add the repo to the trac list')
@@ -38,18 +51,25 @@ def add_repo(ctx, repo, list):
             file.write(repo + '\n')
         file.close
 
-    file = open(file_name,'r+')
-    list_repo = map(lambda p: p.rstrip(), file.readlines())
+    repo_list = get_tracked_repos()
 
     if list:
-        for item in list_repo:
+        for item in repo_list:
             print item
         return
 
-    if repo not in list_repo:
+    file = open(file_name,'r+')
+    if repo not in repo_list:
         file.write(repo+'\n')
         file.close()
     click.echo(repo+ ' is added to the list')
+
+def get_tracked_repos():
+    file_name = os.path.join(gettempdir(), 'repos.txt')
+    file = open(file_name,'r')
+    list_repo = map(lambda p: p.rstrip(), file.readlines())
+    file.close()
+    return list_repo
 
 if  __name__ == '__main__':
     cli(obj={})

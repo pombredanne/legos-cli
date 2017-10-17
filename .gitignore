@@ -1,4 +1,5 @@
 *.pyc
+*.ropeproject
 
 /GithubCredentials.py
 /scripts/TwitterCredentials.py

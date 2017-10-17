@@ -61,8 +61,8 @@
                 "WaitOnNormalExit"
             ],
             "args": [
-                "list",
-                "jamesmontemagno/MediaPlugin"
+                "issues"
+                
             ]
         }
     ]
