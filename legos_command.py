@@ -15,14 +15,14 @@ def cli(ctx):
 @click.pass_context
 @click.option('--status', default='open', metavar='<text>', help='Indicates the state of the issues to return. Can be either open, closed, or all. Default: open')
 @click.argument('repo', metavar='<github_repo>')
-def list_issues(ctx, repo):
+def list_issues(ctx, repo, status):
     ''' lists open issues for the repo by default'''
     gh = Github()
     
     click.echo(status+" issues from " + repo)
     for issue in gh.get_repo(repo).get_issues(state=status):
         localtiem = arrow.get(issue.created_at).to('local').humanize()
-        click.echo("{:4d} {:55.55} {}".format(issue.number, issue.state, localtiem))
+        click.echo("{:4d} {:55.55} {}".format(issue.number, issue.title, localtiem))
 
 @cli.command(name='track')
 @click.option('--repo', metavar='<github_repo>', help='add the repo to the trac list')
