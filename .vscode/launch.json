@@ -45,6 +45,25 @@
             ]
         },
         {
+            "name": "labels",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${file}",
+            "cwd": "",
+            "console": "integratedTerminal",
+            "env": {},
+            "envFile": "${workspaceRoot}/.env",
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit"
+            ],
+            "args": [
+                "labels"
+            ]
+        },
+        {
             "name": "track list",
             "type": "python",
             "request": "launch",

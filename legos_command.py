@@ -72,8 +72,7 @@ def label_stats(ctx, repo):
     
     for project in repo_list:
         mylabels = get_lables(gh.get_repo(project), label_list)
-        print_label_stats(project)
-
+        print_label_stats(project, gh, mylabels)
 
 def print_label_stats(repo, git, mylabels):
     project = git.get_repo(repo)
