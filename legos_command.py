@@ -78,11 +78,17 @@ def label_stats(ctx, repo):
 
 def print_label_stats(repo, git, mylabels):
     project = git.get_repo(repo)
+    click.secho(project.name, bold=True)
+    click.echo(project.description)
+
+    myissues = {}
+
     for label in mylabels:
         issues = project.get_issues(state='open', labels = [label])
-        print "label: {0}\tcount: {1}".format(label.name, total_count(issues))
-    print "PRs: {0}".format(get_pr_count(project))
-    
+        myissues[label.name] = total_count(issues)
+
+    message = "bugs: {0}\tfeature: {1}\tneed-more-info: {2}\t PRs:{3}\n".format(myissues['bug'], myissues['feature'], myissues['need-more-info'], get_pr_count(project))
+    print message
 
 @cli.command(name='track')
 @click.option('--repo', metavar='<github_repo>', help='add the repo to the trac list')
