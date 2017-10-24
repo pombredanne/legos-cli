@@ -9,8 +9,7 @@ from github import Github
 def cli(ctx):
     '''This is a command line tool to list the github issues'''
     #TODO: add code to fetch issue details
-    gh = Github()
-    ctx.obj['GITHUB'] = gh
+   
     if ctx.invoked_subcommand is None:
         click.echo("Hello there!")
 
@@ -29,7 +28,7 @@ def list_issues(ctx, repo, status):
     if repo_list.count == 0:
         click.echo("No tracked repo")
     
-    gh = ctx.obj['GITHUB']
+    gh = Github()
 
     for item in repo_list:
         click.echo(status + " issues from " + item)
@@ -46,7 +45,7 @@ def project_stats(ctx, repo):
     '''shows the basic project stats like stars, issues, watch and PRs for tracked/single repo'''
     print ("\nProject stats")
 
-    gh = ctx.obj['GITHUB']
+    gh = Github()
 
     if repo is not None:
         print_stats(repo, gh)
@@ -61,7 +60,7 @@ def project_stats(ctx, repo):
 @click.pass_context
 def label_stats(ctx, repo):
     '''shows the label stats for the repo'''
-    gh = ctx.obj['GITHUB']
+    gh = Github()
     
     label_list = ['bug', 'feature', 'need-more-info']
 
