@@ -44,7 +44,7 @@ def list_issues(ctx, repo, status):
 @click.pass_context
 def project_stats(ctx, repo):
     '''shows the basic project stats like stars, issues, watch and PRs for tracked/single repo'''
-    print "\nProject stats"
+    print ("\nProject stats")
 
     gh = ctx.obj['GITHUB']
 
@@ -60,7 +60,7 @@ def project_stats(ctx, repo):
 @click.option('--repo', metavar='<github_repo>', help='get labels stats for the repo')
 @click.pass_context
 def label_stats(ctx, repo):
-    
+    '''shows the label stats for the repo'''
     gh = ctx.obj['GITHUB']
     
     label_list = ['bug', 'feature', 'need-more-info']
@@ -88,7 +88,7 @@ def print_label_stats(repo, git, mylabels):
         myissues[label.name] = total_count(issues)
 
     message = "bugs: {0}\tfeature: {1}\tneed-more-info: {2}\t PRs:{3}\n".format(myissues['bug'], myissues['feature'], myissues['need-more-info'], get_pr_count(project))
-    print message
+    print (message)
 
 @cli.command(name='track')
 @click.option('--repo', metavar='<github_repo>', help='add the repo to the trac list')
@@ -108,7 +108,7 @@ def add_repo(ctx, repo, list):
 
     if list or repo is None:
         for item in repo_list:
-            print item
+            print (item)
         return
 
     file = open(file_name,'a')
