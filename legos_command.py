@@ -136,17 +136,13 @@ def add_repo(ctx, repo, list):
 
 @cli.command(name='packages')
 @click.option("--output", metavar='<file_path>', help="supply file path to export data in csv format")
-@click.option("--owner", metavar='<nuget_owner>', help="takes nuget owner name, default is PluginsForXamarin")
+@click.option("--owner", default='PluginsForXamarin', metavar='<nuget_owner>', help="takes nuget owner name, default is PluginsForXamarin")
 @click.pass_context
 def packages(ctx, output, owner):
-    '''lists the stats to nuget packages. WARNING - do not use with user owning large number of packages'''
+    '''Prints the nuget package stats. WARNING - do not use with user owning large number of packages'''
     nuget = PackageManager()
-   
-    if owner:
-        packages = nuget.get_packages(owner)
-    else:
-        packages = nuget.get_packages()
-    
+    packages = nuget.get_packages(owner)
+
     gh = ctx.obj
     label_list = ['bug', 'feature', 'need-more-info']
 
