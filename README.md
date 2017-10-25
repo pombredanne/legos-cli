@@ -9,6 +9,9 @@ Issue tracker for Xamarin plugins
 $ virtualevn venv
 $ pip install --editable .
 ```
+or
+use `pip install xamarin-legos`
+
 and, finally
 
 `$ legos --help`
