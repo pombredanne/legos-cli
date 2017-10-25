@@ -145,7 +145,6 @@ def packages(ctx):
         except:
             message = "{:30} v{}\t{:>8,}".format(package.id, package.version, package.total_downloads)
         print(message)
-        break
 
 
 def get_tracked_repos():
