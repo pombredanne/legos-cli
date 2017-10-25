@@ -2,6 +2,7 @@ import click
 import arrow
 import os
 from tabulate import tabulate
+import csv
 
 from nuget import PackageManager
 from nuget import Package
@@ -129,30 +130,38 @@ def add_repo(ctx, repo, list):
     click.echo(repo+ ' is added to the list')
 
 @cli.command(name='packages')
+@click.option("--output", help="supple file path to export data to csv")
 @click.pass_context
-def packages(ctx):
+def packages(ctx, output):
+    '''lists the stats to nuget packages'''
     nuget = PackageManager()
     packages = nuget.get_packages()
     gh = Github()
     label_list = ['bug', 'feature', 'need-more-info']
 
     rows = []
-    print("\n")
+    packages_count = len(packages)
+    with click.progressbar(packages, label='Fetching the numbers, it may take some time:', length=packages_count) as bar:
+        for package in bar:
+            if package.project_url is None:
+                continue
+            result = urlparse(package.project_url)
+            repo = gh.get_repo(result.path.strip('/'))
+            labels = get_lables(repo, label_list)
+            issues = label_count(repo, labels)
+            pr_count = get_pr_count(repo)
 
-    for package in packages:
-        if package.project_url is None:
-            continue
-        result = urlparse(package.project_url)
-        repo = gh.get_repo(result.path.strip('/'))
-        labels = get_lables(repo, label_list)
-        issues = label_count(repo, labels)
-        pr_count = get_pr_count(repo)
+            try:
+                rows.append([package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info']]) 
+            except:
+                rows.append([package.id, package.version, package.total_downloads, pr_count, 'NA', 'NA', 'NA']) 
 
-        try:
-            rows.append([package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info']]) 
-        except:
-            rows.append([package.id, package.version, package.total_downloads, pr_count, 'NA', 'NA', 'NA']) 
-        break
+    if output is not None:
+        with open(output, 'w') as csvfile:
+            writer = csv.writer(csvfile, dialect='excel')
+            writer.writerow(['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info'])
+            for row in rows:
+                writer.writerow(row)
 
     print (tabulate(rows, headers=['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info']))
 

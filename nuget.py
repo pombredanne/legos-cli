@@ -32,6 +32,6 @@ class PackageManager:
         if response.ok:
             package_data = json.loads(response.content)['data']
             items = map(lambda x: Package(x), package_data)
-            return items
+            return list(items)
         else:
             response.raise_for_status()
