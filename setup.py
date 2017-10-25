@@ -7,7 +7,7 @@ setup(
     author='Prashant Cholachagudda',
     author_email='pvc@outlook.com',
     py_modules=['nuget','legos_command'],
-    install_requires=['Click','PyGithub','arrow', 'tabulate'],
+    install_requires=['Click','PyGithub','arrow', 'tabulate', 'requests'],
     url='https://github.com/prashantvc/legos-cli',
     entry_points='''
         [console_scripts]
