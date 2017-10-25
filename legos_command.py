@@ -1,11 +1,17 @@
 import click
 import arrow
 import os
+from tabulate import tabulate
+
 from nuget import PackageManager
 from nuget import Package
 from tempfile import gettempdir
 from github import Github
-from urllib.parse import urlparse
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+     from urlparse import urlparse
 
 @click.group()
 @click.pass_context
@@ -129,7 +135,9 @@ def packages(ctx):
     packages = nuget.get_packages()
     gh = Github()
     label_list = ['bug', 'feature', 'need-more-info']
-    print ('{:30} {}\t{:>8} {:>4} {:>4} {:>4} {:>4}'.format('package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'more-info'))
+
+    rows = []
+    print("\n")
 
     for package in packages:
         if package.project_url is None:
@@ -139,12 +147,14 @@ def packages(ctx):
         labels = get_lables(repo, label_list)
         issues = label_count(repo, labels)
         pr_count = get_pr_count(repo)
-       
+
         try:
-            message = '{:30} v{}\t{:>8,} {:>4} {:>4} {:>4} {:>4}'.format(package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info'])
+            rows.append([package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info']]) 
         except:
-            message = "{:30} v{}\t{:>8,}".format(package.id, package.version, package.total_downloads)
-        print(message)
+            rows.append([package.id, package.version, package.total_downloads, pr_count, 'NA', 'NA', 'NA']) 
+        break
+
+    print (tabulate(rows, headers=['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info']))
 
 
 def get_tracked_repos():
