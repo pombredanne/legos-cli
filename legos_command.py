@@ -141,7 +141,7 @@ def packages(ctx, output):
 
     rows = []
     packages_count = len(packages)
-    with click.progressbar(packages, label='Fetching the numbers, it may take some time:', length=packages_count) as bar:
+    with click.progressbar(packages, label='Fetching numbers, it will take quite long:', length=packages_count) as bar:
         for package in bar:
             if package.project_url is None:
                 continue
@@ -154,7 +154,7 @@ def packages(ctx, output):
             try:
                 rows.append([package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info']]) 
             except:
-                rows.append([package.id, package.version, package.total_downloads, pr_count, 'NA', 'NA', 'NA']) 
+                rows.append([package.id, package.version, package.total_downloads, pr_count, '-1', '-1', '-1']) 
 
     if output is not None:
         with open(output, 'w') as csvfile:
