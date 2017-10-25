@@ -45,7 +45,7 @@
             ]
         },
         {
-            "name": "labels",
+            "name": "packages",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -60,7 +60,7 @@
                 "WaitOnNormalExit"
             ],
             "args": [
-                "labels"
+                "packages"
             ]
         },
         {

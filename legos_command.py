@@ -1,8 +1,11 @@
 import click
 import arrow
 import os
+from nuget import PackageManager
+from nuget import Package
 from tempfile import gettempdir
 from github import Github
+from urllib.parse import urlparse
 
 @click.group()
 @click.pass_context
@@ -75,16 +78,19 @@ def label_stats(ctx, repo):
         mylabels = get_lables(gh.get_repo(project), label_list)
         print_label_stats(project, gh, mylabels)
 
+def label_count(repo, mylabels):
+    myissues = {}
+    for label in mylabels:
+        issues = repo.get_issues(state='open', labels = [label])
+        myissues[label.name] = total_count(issues)
+    return myissues
+
 def print_label_stats(repo, git, mylabels):
     project = git.get_repo(repo)
     click.secho(project.name, bold=True)
     click.echo(project.description)
 
-    myissues = {}
-
-    for label in mylabels:
-        issues = project.get_issues(state='open', labels = [label])
-        myissues[label.name] = total_count(issues)
+    myissues = label_count(project, mylabels)
 
     message = "bugs: {0}\tfeature: {1}\tneed-more-info: {2}\t PRs:{3}\n".format(myissues['bug'], myissues['feature'], myissues['need-more-info'], get_pr_count(project))
     print (message)
@@ -116,6 +122,32 @@ def add_repo(ctx, repo, list):
         file.close()
     click.echo(repo+ ' is added to the list')
 
+@cli.command(name='packages')
+@click.pass_context
+def packages(ctx):
+    nuget = PackageManager()
+    packages = nuget.get_packages()
+    gh = Github()
+    label_list = ['bug', 'feature', 'need-more-info']
+    print ('{:30} {}\t{:>8} {:>4} {:>4} {:>4} {:>4}'.format('package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'more-info'))
+
+    for package in packages:
+        if package.project_url is None:
+            continue
+        result = urlparse(package.project_url)
+        repo = gh.get_repo(result.path.strip('/'))
+        labels = get_lables(repo, label_list)
+        issues = label_count(repo, labels)
+        pr_count = get_pr_count(repo)
+       
+        try:
+            message = '{:30} v{}\t{:>8,} {:>4} {:>4} {:>4} {:>4}'.format(package.id, package.version, package.total_downloads, pr_count, issues['bug'], issues['feature'], issues['need-more-info'])
+        except:
+            message = "{:30} v{}\t{:>8,}".format(package.id, package.version, package.total_downloads)
+        print(message)
+        break
+
+
 def get_tracked_repos():
     file_name = os.path.join(gettempdir(), 'repos.txt')
     file = open(file_name,'r')
@@ -135,7 +167,10 @@ def print_stats(project, git):
 def get_lables(repo, names):
     labels = []
     for name in names:
-       labels.append(repo.get_label(name))
+        try:
+            labels.append(repo.get_label(name))
+        except:
+            continue
     return labels
 
 def get_pr_count(repo):
