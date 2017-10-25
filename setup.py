@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='legos',
-    version='0.1',
+    version='1.0',
     py_modules=['legos_command'],
     install_requires=['Click','PyGithub','arrow', 'tabulate'],
     entry_points='''

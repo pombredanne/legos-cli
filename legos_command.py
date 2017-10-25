@@ -19,6 +19,7 @@ except ImportError:
 def cli(ctx):
     '''This is a command line tool to list the github issues'''
     #TODO: add code to fetch issue details
+    ctx.obj = Github()
    
     if ctx.invoked_subcommand is None:
         click.echo("Hello there!")
@@ -36,9 +37,11 @@ def list_issues(ctx, repo, status):
         repo_list = get_tracked_repos()
 
     if repo_list.count == 0:
-        click.echo("No tracked repo")
+        click.echo("No tracked repo. Use `legos track --repo <repo_name>`")
     
-    gh = Github()
+    gh = ctx.obj
+
+    issues_list = []
 
     for item in repo_list:
         click.echo(status + " issues from " + item)
@@ -46,7 +49,9 @@ def list_issues(ctx, repo, status):
         
         for issue in issues:
             localtiem = arrow.get(issue.created_at).to('local').humanize()
-            click.echo("{:4d} {:55.55} {}".format(issue.number, issue.title, localtiem))
+            issues_list.append([issue.number, issue.title, localtiem])
+    
+    print(tabulate(issues_list,tablefmt="plain"))
 
 @cli.command(name='stats')
 @click.option('--repo', metavar='<github_repo>', help='get stats for the repo')
@@ -55,7 +60,7 @@ def project_stats(ctx, repo):
     '''shows the basic project stats like stars, issues, watch and PRs for tracked/single repo'''
     print ("\nProject stats")
 
-    gh = Github()
+    gh = ctx.obj
 
     if repo is not None:
         print_stats(repo, gh)
@@ -70,19 +75,19 @@ def project_stats(ctx, repo):
 @click.pass_context
 def label_stats(ctx, repo):
     '''shows the label stats for the repo'''
-    gh = Github()
+    gh = ctx.obj
     
     label_list = ['bug', 'feature', 'need-more-info']
 
     if repo is not None:
-        mylabels = get_lables(gh.get_repo(repo), label_list)
+        mylabels = get_labels(gh.get_repo(repo), label_list)
         print_label_stats(repo, gh, mylabels)
         return
     
     repo_list = get_tracked_repos()
     
     for project in repo_list:
-        mylabels = get_lables(gh.get_repo(project), label_list)
+        mylabels = get_labels(gh.get_repo(project), label_list)
         print_label_stats(project, gh, mylabels)
 
 def label_count(repo, mylabels):
@@ -130,13 +135,19 @@ def add_repo(ctx, repo, list):
     click.echo(repo+ ' is added to the list')
 
 @cli.command(name='packages')
-@click.option("--output", help="supple file path to export data to csv")
+@click.option("--output", metavar='<file_path>', help="supply file path to export data in csv format")
+@click.option("--owner", metavar='<nuget_owner>', help="takes nuget owner name, default is PluginsForXamarin")
 @click.pass_context
-def packages(ctx, output):
-    '''lists the stats to nuget packages'''
+def packages(ctx, output, owner):
+    '''lists the stats to nuget packages. WARNING - do not use with user owning large number of packages'''
     nuget = PackageManager()
-    packages = nuget.get_packages()
-    gh = Github()
+   
+    if owner:
+        packages = nuget.get_packages(owner)
+    else:
+        packages = nuget.get_packages()
+    
+    gh = ctx.obj
     label_list = ['bug', 'feature', 'need-more-info']
 
     rows = []
@@ -147,7 +158,7 @@ def packages(ctx, output):
                 continue
             result = urlparse(package.project_url)
             repo = gh.get_repo(result.path.strip('/'))
-            labels = get_lables(repo, label_list)
+            labels = get_labels(repo, label_list)
             issues = label_count(repo, labels)
             pr_count = get_pr_count(repo)
 
@@ -156,14 +167,16 @@ def packages(ctx, output):
             except:
                 rows.append([package.id, package.version, package.total_downloads, pr_count, '-1', '-1', '-1']) 
 
+    header = ['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info']
+
     if output is not None:
         with open(output, 'w') as csvfile:
             writer = csv.writer(csvfile, dialect='excel')
-            writer.writerow(['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info'])
+            writer.writerow(header)
             for row in rows:
                 writer.writerow(row)
 
-    print (tabulate(rows, headers=['package', 'version', 'downloads', 'PRs', 'bugs', 'feature', 'need-more-info']))
+    print (tabulate(rows, headers=header))
 
 
 def get_tracked_repos():
@@ -182,7 +195,7 @@ def print_stats(project, git):
     stats_text = "stars: {0}\tissues: {1}\twatch: {2}\tPRs: {3}\n".format(repo.stargazers_count, repo.open_issues_count, repo.watchers_count, pr_count)
     click.echo(stats_text)
 
-def get_lables(repo, names):
+def get_labels(repo, names):
     labels = []
     for name in names:
         try:
@@ -201,4 +214,4 @@ def total_count(paginated_list):
     return pl_count
 
 if  __name__ == '__main__':
-    cli(obj={})
+    cli(obj)
