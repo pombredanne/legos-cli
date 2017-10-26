@@ -1,9 +1,10 @@
 import click
 import arrow
 import os
-from tabulate import tabulate
 import csv
+import configparser
 
+from tabulate import tabulate
 from nuget import PackageManager
 from nuget import Package
 from tempfile import gettempdir
@@ -15,14 +16,27 @@ except ImportError:
      from urlparse import urlparse
 
 @click.group()
+@click.option('--token', help='Github personal access token. See https://aka.ms/github_token')
 @click.pass_context
-def cli(ctx):
+def cli(ctx, token):
     '''This is a command line tool to list the github issues'''
-    #TODO: add code to fetch issue details
-    ctx.obj = Github()
-   
-    if ctx.invoked_subcommand is None:
-        click.echo("Hello there!")
+
+    config = configparser.ConfigParser()
+    
+    if token:
+        config['DEFAULT'] = {'github_token': token}
+        with open('legos.ini','w') as configfile:
+            config.write(configfile)
+
+    config.read('legos.ini')
+    gh_token = None
+    try:
+        gh_token = config['DEFAULT']['github_token']
+    except:
+        click.echo('github token not set, use --token flag')
+        exit()
+
+    ctx.obj = Github(gh_token)
 
 @cli.command(name='issues')
 @click.pass_context
